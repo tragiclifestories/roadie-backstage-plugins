@@ -93,7 +93,6 @@ const generatedColumns: TableColumn[] = [
 
 type Props = {
   loading: boolean;
-  retry: () => void;
   projectName: string;
   page: number;
   prData?: PullRequest[];
@@ -153,7 +152,7 @@ const PullRequests = (__props: TableProps) => {
   const [PRStatusFilter, setPRStatusFilter] = useState<PullRequestState>(
     'open',
   );
-  const [tableProps, { retry, setPage, setPageSize }] = usePullRequests({
+  const [tableProps, { setPage, setPageSize }] = usePullRequests({
     state: PRStatusFilter,
     owner,
     repo,
@@ -189,7 +188,6 @@ const PullRequests = (__props: TableProps) => {
       {...tableProps}
       StateFilterComponent={StateFilterComponent}
       loading={tableProps.loading}
-      retry={retry}
       onChangePageSize={setPageSize}
       onChangePage={setPage}
     />
@@ -202,5 +200,5 @@ export const PullRequestsTable = (__props: TableProps) => {
   if (!projectName || projectName === '') {
     return <MissingAnnotationEmptyState annotation={GITHUB_PULL_REQUESTS_ANNOTATION} />
   }
-  return <PullRequests/>
+  return <PullRequests />
 };

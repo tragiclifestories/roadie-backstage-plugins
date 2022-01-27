@@ -28,6 +28,7 @@ export class GithubPullRequestsClient implements GithubPullRequestsApi {
     page,
     state = 'all',
     baseUrl,
+    etag
   }: {
     token: string;
     owner: string;
@@ -36,21 +37,29 @@ export class GithubPullRequestsClient implements GithubPullRequestsApi {
     page?: number;
     state?: PullRequestState;
     baseUrl: string | undefined;
+    etag: string
   }): Promise<{
     maxTotalItems?: number;
     pullRequestsData: PullsListResponseData;
+    etag?: string
   }> {
+
     const pullRequestResponse = await new Octokit({
       auth: token,
       ...(baseUrl && { baseUrl }),
-    }).pulls.list({
+    }).request("GET /repos/{owner}/{repo}/pulls", {
+      headers: {
+        "If-None-Match": etag,
+      },
       repo,
       state,
       per_page: pageSize,
       page,
-      owner,
-    });
+      owner
+    })
     const paginationLinks = pullRequestResponse.headers.link;
+    const newEtag = pullRequestResponse.headers.etag
+
     const lastPage = paginationLinks?.match(/\d+(?!.*page=\d*)/g) || ['1'];
     const maxTotalItems = paginationLinks?.endsWith('rel="last"')
       ? parseInt(lastPage[0], 10) * pageSize
@@ -58,6 +67,7 @@ export class GithubPullRequestsClient implements GithubPullRequestsApi {
     return {
       maxTotalItems,
       pullRequestsData: (pullRequestResponse.data as any) as PullsListResponseData,
+      etag: newEtag
     };
   }
 }

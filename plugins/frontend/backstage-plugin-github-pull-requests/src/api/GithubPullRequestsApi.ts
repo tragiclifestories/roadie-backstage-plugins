@@ -32,6 +32,7 @@ export type GithubPullRequestsApi = {
     branch,
     state,
     baseUrl,
+    etag
   }: {
     token: string;
     owner: string;
@@ -41,8 +42,10 @@ export type GithubPullRequestsApi = {
     branch?: string;
     state?: PullRequestState;
     baseUrl: string|undefined;
+    etag: string
   }) => Promise<{
     maxTotalItems?: number;
     pullRequestsData: PullsListResponseData;
+    etag?: string
   }>;
 };
