@@ -19,34 +19,9 @@ import { githubPullRequestsApiRef } from '../api/GithubPullRequestsApi';
 import { useApi, githubAuthApiRef } from '@backstage/core-plugin-api';
 import { RequestError } from "@octokit/request-error";
 import moment from 'moment';
-import { PullRequestState } from '../types';
+import { PrState, PullRequestState } from '../types';
 import { useBaseUrl } from './useBaseUrl';
 import { GithubPullRequestsContext } from "./PullRequestsContext"
-
-export type PullRequest = {
-  id: number;
-  number: number;
-  url: string;
-  title: string;
-  updatedTime: string;
-  createdTime: string;
-  state: string;
-  draft: boolean;
-  merged: string | null;
-  created_at: string;
-  closed_at: string;
-  creatorNickname: string;
-  creatorProfileLink: string;
-};
-export type PrStateData = {
-  etag: string;
-  data: PullRequest[];
-}
-export type PrState = {
-  open: PrStateData;
-  closed: PrStateData;
-  all: PrStateData;
-}
 
 export function usePullRequests({
   owner,
@@ -70,15 +45,11 @@ export function usePullRequests({
   const getElapsedTime = (start: string) => {
     return moment(start).fromNow();
   };
-  console.log(prState)
 
   const [{ loading, error }, doFetch] = useAsyncFn(async () => {
-    const token = await auth.getAccessToken(['repo', 'public_repo'], { optional: true });
-    if (!repo) {
-      return [];
-    }
 
     try {
+      const token = await auth.getAccessToken(['repo']);
       const {
         maxTotalItems,
         pullRequestsData,
@@ -92,13 +63,13 @@ export function usePullRequests({
         branch,
         state,
         baseUrl,
-        etag: prState[state].etag || ""
+        etag: state && prState[state].etag || ""
       })
       if (maxTotalItems) {
         setTotal(maxTotalItems);
       }
       if (etag) {
-        setPrState((current) => ({
+        setPrState((current: PrState) => ({
           ...current,
           ...{ [state]: { ...current[state], etag } }
         }))
@@ -137,7 +108,6 @@ export function usePullRequests({
     }
     catch (e) {
       if (e instanceof RequestError) {
-        console.log(e.name, e.status, e.request)
         if (e.status !== 304) {
           throw e
         }
@@ -151,14 +121,13 @@ export function usePullRequests({
     (async () => {
       const pullRequests = await doFetch();
       if (pullRequests) {
-        setPrState((current) => ({
+        setPrState((current: PrState) => ({
           ...current,
           ...{ [state]: { ...current[state], data: pullRequests } }
         }))
       }
 
     })()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, page, repo, owner, pageSize]);
   return [
     {

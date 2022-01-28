@@ -15,9 +15,11 @@
  */
 
 import { GithubPullRequestsApi } from './GithubPullRequestsApi';
-import { Octokit } from '@octokit/rest';
 import { PullsListResponseData } from '@octokit/types';
 import { PullRequestState } from '../types';
+import { createTokenAuth } from "@octokit/auth-token"
+import { request } from "@octokit/request"
+import { createUnauthenticatedAuth } from "@octokit/auth-unauthenticated"
 
 export class GithubPullRequestsClient implements GithubPullRequestsApi {
   async listPullRequests({
@@ -43,32 +45,35 @@ export class GithubPullRequestsClient implements GithubPullRequestsApi {
     pullRequestsData: PullsListResponseData;
     etag?: string
   }> {
-    console.log(typeof token, "TOKEN?")
-    const pullRequestResponse = await new Octokit({
-      auth: token,
-      ...(baseUrl && { baseUrl }),
-    }).pulls.list({
-      headers: {
-        "If-None-Match": etag,
-      },
-      repo,
-      state,
-      per_page: pageSize,
-      page,
-      owner
-    })
-    console.log(pullRequestResponse)
-    const paginationLinks = pullRequestResponse.headers.link;
-    const newEtag = pullRequestResponse.headers.etag
 
-    const lastPage = paginationLinks?.match(/\d+(?!.*page=\d*)/g) || ['1'];
-    const maxTotalItems = paginationLinks?.endsWith('rel="last"')
-      ? parseInt(lastPage[0], 10) * pageSize
-      : undefined;
-    return {
-      maxTotalItems,
-      pullRequestsData: (pullRequestResponse.data as any) as PullsListResponseData,
-      etag: newEtag
-    };
+    const auth = token ? createTokenAuth(token) : createUnauthenticatedAuth({ reason: "Guest user" });
+
+    try {
+      const pullRequestResponse = await auth.hook(request, "GET /repos/{owner}/{repo}/pulls", {
+        baseUrl,
+        headers: {
+          "if-none-match": etag,
+        },
+        repo,
+        state,
+        per_page: pageSize,
+        page,
+        owner
+      })
+      const paginationLinks = pullRequestResponse.headers.link;
+      const newEtag = pullRequestResponse.headers.etag
+
+      const lastPage = paginationLinks?.match(/\d+(?!.*page=\d*)/g) || ['1'];
+      const maxTotalItems = paginationLinks?.endsWith('rel="last"')
+        ? parseInt(lastPage[0], 10) * pageSize
+        : undefined;
+      return {
+        maxTotalItems,
+        pullRequestsData: (pullRequestResponse.data as any) as PullsListResponseData,
+        etag: newEtag
+      };
+    } catch (e) {
+      console.log(e)
+    }
   }
 }

@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { Typography, Box, ButtonGroup, Button } from '@material-ui/core';
 import GitHubIcon from '@material-ui/icons/GitHub';
 import { Table, TableColumn, MissingAnnotationEmptyState } from '@backstage/core-components';
 import { isGithubSlugSet, GITHUB_PULL_REQUESTS_ANNOTATION } from '../../utils/isGithubSlugSet';
-import { usePullRequests, PullRequest } from '../usePullRequests';
-import { PullRequestState } from '../../types';
+import { usePullRequests } from '../usePullRequests';
+import { PullRequestState, PullRequest } from '../../types';
 import { Entity } from '@backstage/catalog-model';
 import { getStatusIconType } from '../Icons';
 import { useEntity } from '@backstage/plugin-catalog-react';
@@ -152,13 +152,17 @@ const PullRequests = (__props: TableProps) => {
   const [PRStatusFilter, setPRStatusFilter] = useState<PullRequestState>(
     'open',
   );
+  const [data, setData] = useState<PullRequest[]>([]);
   const [pageSize, setPageSize] = useState<number>(5);
   const [tableProps, { setPage }] = usePullRequests({
     state: PRStatusFilter,
     owner,
     repo,
-    pageSize
+    pageSize: 20
   });
+  useEffect(() => {
+    setData(tableProps.prData.slice(0, pageSize))
+  }, [pageSize, tableProps.prData])
 
   const StateFilterComponent = () => (
     <Box position="absolute" right={300} top={20}>
@@ -187,7 +191,10 @@ const PullRequests = (__props: TableProps) => {
 
   return (
     <PullRequestsTableView
-      {...tableProps}
+      page={tableProps.page}
+      projectName={tableProps.projectName}
+      total={tableProps.total}
+      prData={data}
       pageSize={pageSize}
       StateFilterComponent={StateFilterComponent}
       loading={tableProps.loading}
