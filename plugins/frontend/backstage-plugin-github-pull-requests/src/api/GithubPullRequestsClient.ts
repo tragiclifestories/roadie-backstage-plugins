@@ -43,11 +43,11 @@ export class GithubPullRequestsClient implements GithubPullRequestsApi {
     pullRequestsData: PullsListResponseData;
     etag?: string
   }> {
-
+    console.log(typeof token, "TOKEN?")
     const pullRequestResponse = await new Octokit({
       auth: token,
       ...(baseUrl && { baseUrl }),
-    }).request("GET /repos/{owner}/{repo}/pulls", {
+    }).pulls.list({
       headers: {
         "If-None-Match": etag,
       },
@@ -57,6 +57,7 @@ export class GithubPullRequestsClient implements GithubPullRequestsApi {
       page,
       owner
     })
+    console.log(pullRequestResponse)
     const paginationLinks = pullRequestResponse.headers.link;
     const newEtag = pullRequestResponse.headers.etag
 

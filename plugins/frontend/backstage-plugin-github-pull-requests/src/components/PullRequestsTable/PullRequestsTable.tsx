@@ -152,10 +152,12 @@ const PullRequests = (__props: TableProps) => {
   const [PRStatusFilter, setPRStatusFilter] = useState<PullRequestState>(
     'open',
   );
-  const [tableProps, { setPage, setPageSize }] = usePullRequests({
+  const [pageSize, setPageSize] = useState<number>(5);
+  const [tableProps, { setPage }] = usePullRequests({
     state: PRStatusFilter,
     owner,
     repo,
+    pageSize
   });
 
   const StateFilterComponent = () => (
@@ -186,6 +188,7 @@ const PullRequests = (__props: TableProps) => {
   return (
     <PullRequestsTableView
       {...tableProps}
+      pageSize={pageSize}
       StateFilterComponent={StateFilterComponent}
       loading={tableProps.loading}
       onChangePageSize={setPageSize}
