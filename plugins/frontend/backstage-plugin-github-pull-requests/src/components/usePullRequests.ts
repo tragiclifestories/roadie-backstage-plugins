@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { useContext, useEffect, useState } from 'react';
-import { useAsyncFn } from 'react-use';
+import { useEffect, useState } from 'react';
+import { useAsync } from 'react-use';
 import { githubPullRequestsApiRef } from '../api/GithubPullRequestsApi';
 import { useApi, githubAuthApiRef } from '@backstage/core-plugin-api';
 import { RequestError } from "@octokit/request-error";
 import moment from 'moment';
 import { PrState, PullRequestState } from '../types';
 import { useBaseUrl } from './useBaseUrl';
-import { GithubPullRequestsContext } from "./PullRequestsContext"
+import { useGithubPullRequests } from "./GithubPullRequestsContext"
 
 export function usePullRequests({
   owner,
@@ -41,13 +41,12 @@ export function usePullRequests({
   const baseUrl = useBaseUrl();
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
-  const { prState, setPrState } = useContext(GithubPullRequestsContext)
+  const { prState, setPrState } = useGithubPullRequests()
   const getElapsedTime = (start: string) => {
     return moment(start).fromNow();
   };
 
-  const [{ loading, error }, doFetch] = useAsyncFn(async () => {
-
+  const { loading, value, error } = useAsync(async (): Promise<any> => {
     try {
       const token = await auth.getAccessToken(['repo']);
       const {
@@ -118,17 +117,14 @@ export function usePullRequests({
     [page, repo, owner, state, pageSize]);
   useEffect(() => {
     setPage(0);
-    (async () => {
-      const pullRequests = await doFetch();
-      if (pullRequests) {
-        setPrState((current: PrState) => ({
-          ...current,
-          ...{ [state]: { ...current[state], data: pullRequests } }
-        }))
-      }
+    if (!loading && value) {
+      setPrState((current: PrState) => ({
+        ...current,
+        ...{ [state]: { ...current[state], data: value } }
+      }))
+    }
 
-    })()
-  }, [state, page, repo, owner, pageSize]);
+  }, [state, page, repo, owner, pageSize, value]);
   return [
     {
       page,

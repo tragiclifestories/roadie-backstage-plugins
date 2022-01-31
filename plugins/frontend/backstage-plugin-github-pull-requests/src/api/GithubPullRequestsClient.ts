@@ -48,32 +48,28 @@ export class GithubPullRequestsClient implements GithubPullRequestsApi {
 
     const auth = token ? createTokenAuth(token) : createUnauthenticatedAuth({ reason: "Guest user" });
 
-    try {
-      const pullRequestResponse = await auth.hook(request, "GET /repos/{owner}/{repo}/pulls", {
-        baseUrl,
-        headers: {
-          "if-none-match": etag,
-        },
-        repo,
-        state,
-        per_page: pageSize,
-        page,
-        owner
-      })
-      const paginationLinks = pullRequestResponse.headers.link;
-      const newEtag = pullRequestResponse.headers.etag
+    const pullRequestResponse = await auth.hook(request, "GET /repos/{owner}/{repo}/pulls", {
+      baseUrl,
+      headers: {
+        "if-none-match": etag,
+      },
+      repo,
+      state,
+      per_page: pageSize,
+      page,
+      owner
+    })
+    const paginationLinks = pullRequestResponse.headers.link;
+    const newEtag = pullRequestResponse.headers.etag
 
-      const lastPage = paginationLinks?.match(/\d+(?!.*page=\d*)/g) || ['1'];
-      const maxTotalItems = paginationLinks?.endsWith('rel="last"')
-        ? parseInt(lastPage[0], 10) * pageSize
-        : undefined;
-      return {
-        maxTotalItems,
-        pullRequestsData: (pullRequestResponse.data as any) as PullsListResponseData,
-        etag: newEtag
-      };
-    } catch (e) {
-      console.log(e)
-    }
+    const lastPage = paginationLinks?.match(/\d+(?!.*page=\d*)/g) || ['1'];
+    const maxTotalItems = paginationLinks?.endsWith('rel="last"')
+      ? parseInt(lastPage[0], 10) * pageSize
+      : undefined;
+    return {
+      maxTotalItems,
+      pullRequestsData: (pullRequestResponse.data as any) as PullsListResponseData,
+      etag: newEtag
+    };
   }
 }
