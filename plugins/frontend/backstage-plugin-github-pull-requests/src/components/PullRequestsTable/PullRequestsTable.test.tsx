@@ -15,7 +15,7 @@
  */
 
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import {
   configApiRef,
   githubAuthApiRef,
@@ -50,7 +50,7 @@ const apis: [AnyApiRef, Partial<unknown>][] = [
   [githubPullRequestsApiRef, new GithubPullRequestsClient()],
 ];
 
-describe('PullRequestsTable', () => {
+describe.only('PullRequestsTable', () => {
   const worker = setupServer();
   setupRequestMockHandlers(worker);
 
@@ -61,10 +61,7 @@ describe('PullRequestsTable', () => {
         (_, res, ctx) => res(ctx.json(openPullsRequestMock)),
       ),
     );
-  });
-
-  it('should display a table with data from requests', async () => {
-    const rendered = render(
+    render(
       <TestApiProvider apis={apis}>
         <EntityProvider entity={entityMock}>
           <GithubPullRequestsProvider>
@@ -73,13 +70,16 @@ describe('PullRequestsTable', () => {
         </EntityProvider>
       </TestApiProvider>,
     );
+  });
+
+  it('should display a table with data from requests', async () => {
     expect(
-      await rendered.findByText('add test with msw library'),
+      await screen.findByText('add test with msw library'),
     ).toBeInTheDocument();
-    expect(await rendered.findByText('muenchdo')).toBeInTheDocument();
-    expect(await rendered.findByText('mcalus3')).toBeInTheDocument();
+    expect(await screen.findByText('muenchdo')).toBeInTheDocument();
+    expect(await screen.findByText('mcalus3')).toBeInTheDocument();
     expect(
-      await rendered.findByText('Bump ini from 1.3.5 to 1.3.8'),
+      await screen.findByText('Bump ini from 1.3.5 to 1.3.8'),
     ).toBeInTheDocument();
   });
 });
