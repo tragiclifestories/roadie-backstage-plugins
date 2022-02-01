@@ -41,11 +41,11 @@ export type GithubPullRequestsApi = {
     page?: number;
     branch?: string;
     state?: PullRequestState;
-    baseUrl: string|undefined;
+    baseUrl: string | undefined;
     etag: string
   }) => Promise<{
     maxTotalItems?: number;
     pullRequestsData: PullsListResponseData;
-    etag?: string
+    etag: string
   }>;
 };

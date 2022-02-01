@@ -71,7 +71,7 @@ export function usePullRequests({
       if (etag) {
         setPrState((current: PrState) => ({
           ...current,
-          ...{ [state]: { ...current[state], etag } }
+          [state]: { ...current[state], etag }
         }))
 
       }
@@ -122,7 +122,7 @@ export function usePullRequests({
     if (!loading && value) {
       setPrState((current: PrState) => ({
         ...current,
-        ...{ [state]: { ...current[state], data: value } }
+        [state]: { ...current[state], data: value }
       }))
     }
 

@@ -43,7 +43,7 @@ export class GithubPullRequestsClient implements GithubPullRequestsApi {
   }): Promise<{
     maxTotalItems?: number;
     pullRequestsData: PullsListResponseData;
-    etag?: string
+    etag: string
   }> {
 
     const auth = token ? createTokenAuth(token) : createUnauthenticatedAuth({ reason: "Guest user" });
@@ -60,7 +60,7 @@ export class GithubPullRequestsClient implements GithubPullRequestsApi {
       owner
     })
     const paginationLinks = pullRequestResponse.headers.link;
-    const newEtag = pullRequestResponse.headers.etag
+    const newEtag = pullRequestResponse.headers.etag ?? ""
 
     const lastPage = paginationLinks?.match(/\d+(?!.*page=\d*)/g) || ['1'];
     const maxTotalItems = paginationLinks?.endsWith('rel="last"')
