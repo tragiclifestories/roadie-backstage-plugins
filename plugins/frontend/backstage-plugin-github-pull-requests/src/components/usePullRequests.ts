@@ -19,9 +19,9 @@ import { githubPullRequestsApiRef } from '../api/GithubPullRequestsApi';
 import { useApi, githubAuthApiRef } from '@backstage/core-plugin-api';
 import { RequestError } from "@octokit/request-error";
 import moment from 'moment';
-import { PrState, PullRequest, PullRequestState } from '../types';
+import { PullRequest, PullRequestState } from '../types';
 import { useBaseUrl } from './useBaseUrl';
-import { useGithubPullRequests } from "./GithubPullRequestsContext"
+import { useStore } from "./store"
 
 export function usePullRequests({
   owner,
@@ -41,7 +41,7 @@ export function usePullRequests({
   const baseUrl = useBaseUrl();
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
-  const { prState, setPrState } = useGithubPullRequests()
+  const { prState, setPrState } = useStore()
   const getElapsedTime = (start: string) => {
     return moment(start).fromNow();
   };
@@ -69,11 +69,7 @@ export function usePullRequests({
         setTotal(maxTotalItems);
       }
       if (etag) {
-        setPrState((current: PrState) => ({
-          ...current,
-          [state]: { ...current[state], etag }
-        }))
-
+        setPrState({ [state]: { ...prState[state], etag } })
       }
 
       result = pullRequestsData.map(
@@ -120,10 +116,7 @@ export function usePullRequests({
   useEffect(() => {
     setPage(0);
     if (!loading && value) {
-      setPrState((current: PrState) => ({
-        ...current,
-        [state]: { ...current[state], data: value }
-      }))
+      setPrState({ [state]: { ...prState[state], data: value } })
     }
 
   }, [state, page, repo, owner, pageSize, value, setPrState, loading]);
